@@ -2,10 +2,10 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tags on Noah Moss</title>
-    <link>http://noahmoss.me/tags/</link>
+    <link>https://noahmoss.me/tags/</link>
     <description>Recent content in Tags on Noah Moss</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <copyright>© {2020}</copyright><atom:link href="http://noahmoss.me/tags/index.xml" rel="self" type="application/rss+xml" />
+    <copyright>© {2020}</copyright><atom:link href="https://noahmoss.me/tags/index.xml" rel="self" type="application/rss+xml" />
   </channel>
 </rss>
