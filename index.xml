@@ -6,14 +6,16 @@
     <description>Recent content on Noah Moss</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <copyright>© {2020}</copyright><atom:link href="https://noahmoss.me/index.xml" rel="self" type="application/rss+xml" />
+    <copyright>© 2020</copyright><atom:link href="https://noahmoss.me/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title></title>
+      <title>About Me</title>
       <link>https://noahmoss.me/about/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://noahmoss.me/about/</guid>
-      <description></description>
+      <description>I&amp;rsquo;m a software engineer based in the San Francisco Bay Area. I currently work primarily in Erlang, and my professional interests include backend application development, distributed systems, and functional programming.
+This website, however, is mainly the home for my personal interests. Right now these include biology (particularly genomics and biotech), metacognition about learning and memory, and various aspects of tech policy and design.
+I&amp;rsquo;ll be using my blog mostly as a means of &amp;ldquo;learning in public&amp;rdquo;—clarifying and cementing concepts in my mind by forcing myself to set them in text and put them out into the ether.</description>
     </item>
     
   </channel>
