@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import './CrosswordGrid.css';
 
 interface CrosswordGridProps {
@@ -11,66 +11,85 @@ interface Cell {
   number: number | null;
 }
 
-interface Cursor {
-  row: number;
-  col: number;
+enum Direction {
+  Across,
+  Down,
 }
 
+interface Cursor {
+  row: number | null;
+  col: number | null;
+  direction: Direction;
+}
+
+const initialCells = (width: number, height: number) => {
+  let num = 1;
+  return Array.from({ length: height }, (_, rowIndex) => Array.from({ length: width }, (_, colIndex) => ({
+    filled: false,
+    number: (colIndex === 0 || rowIndex === 0) ? num++ : null,
+  })));
+}
+
+const findWordBoundaries = (cells: Cell[][], row: number, col: number, direction: Direction) => {
+    let start = direction === Direction.Across ? col : row;
+    let end = start;
+    const maxIndex = direction === Direction.Across ? cells[row].length : cells.length;
+
+    // Search backwards to find the start of the word
+    while (start > 0) {
+        const checkCell = direction === Direction.Across ? cells[row][start - 1] : cells[start - 1][col];
+        if (checkCell.filled) break;
+        start--;
+    }
+
+    // Search forwards to find the end of the word
+    while (end < maxIndex - 1) {
+        const checkCell = direction === Direction.Across ? cells[row][end + 1] : cells[end + 1][col];
+        if (checkCell.filled) break;
+        end++;
+    }
+
+    return { start, end };
+};
+
 const CrosswordGrid = ({ width, height }: CrosswordGridProps) => {
-  const [cells, setCells] = useState<Cell[][]>(() =>
-    Array.from({ length: height }, () => Array.from({ length: width }, () => ({
-      filled: false,
-      number: null
-    })))
-  );
+  const [cells, setCells] = useState<Cell[][]>(initialCells(width, height));
+  const [cursor, setCursor] = useState<Cursor | null>({row: null, col: null, direction: Direction.Across});
 
-  const [cursor, setCursor] = useState<Cursor | null>();
+  const getClassName = (cell: Cell, rowIndex: number, colIndex: number) => {
+    const classes = ['grid-cell'];
+    if (cell.filled) classes.push('filled');
 
-  // Is the cell at the given row and column the start of a word?
-  const isStartOfWord = (cells: Cell[][], rowIndex: number, colIndex: number) => {
-    return !cells[rowIndex][colIndex].filled &&
-      ((colIndex === 0 || cells[rowIndex][colIndex - 1].filled) ||
-        (rowIndex === 0 || cells[rowIndex - 1][colIndex].filled));
-  }
+    if (cursor && cursor.row === rowIndex && cursor.col === colIndex) {
+        classes.push('cursor');
+    }
 
-  // Recomputes the numbering of the cells based on where each word starts, and updates the state
-  const updateNumbering = useCallback(() => {
-    setCells(prevCells => {
-      let num = 1;
-      return prevCells.map((rowArray, rowIndex) =>
-        rowArray.map((cell, colIndex) => {
-          if (isStartOfWord(prevCells, rowIndex, colIndex)) {
-            return { ...cell, number: num++ };
-          }
-          return { ...cell, number: null };
-        })
-      );
-    });
-  }, []);
+    if (cursor && cursor.row && cursor.col && !cell.filled) {
+        const { start, end } = findWordBoundaries(cells, cursor.row, cursor.col, cursor.direction);
 
-  useEffect(() => {
-    updateNumbering();
-  }, [updateNumbering]);
+        if (cursor.direction === Direction.Across && cursor.row === rowIndex && colIndex >= start && colIndex <= end) {
+            classes.push('cursor-across');
+        }
+        if (cursor.direction === Direction.Down && cursor.col === colIndex && rowIndex >= start && rowIndex <= end) {
+            classes.push('cursor-down');
+        }
+    }
 
+    return classes.join(' ');
+};
   const handleCellClick = useCallback((event: React.MouseEvent<HTMLDivElement>, row: number, col: number) => {
     if (event.shiftKey) {
       setCells(prevCells => {
-        const newCells = prevCells.map((rowArray, rowIndex) =>
-          rowArray.map((cell, colIndex) => {
-            if (rowIndex === row && colIndex === col) {
-              return { ...cell, filled: !cell.filled };
-            }
-            return cell;
-          })
-        );
+        const newCells = [...prevCells];
+        newCells[row][col].filled = !newCells[row][col].filled;
         return newCells;
       });
-      updateNumbering();
+    } else {
+      if (!cells[row][col].filled) {
+        setCursor(cursor && cursor.row === row && cursor.col === col ? null : {row, col, direction: cursor?.direction || Direction.Across});
+      }
     }
-    else {
-
-    }
-  }, [updateNumbering]);
+  }, [cells, cursor]);
 
   return (
     <div className="grid">
@@ -79,7 +98,7 @@ const CrosswordGrid = ({ width, height }: CrosswordGridProps) => {
           {rowArray.map((cell, colIndex) => (
             <div
               key={colIndex}
-              className={`grid-cell ${cell.filled ? 'filled' : ''}`}
+              className={getClassName(cell, rowIndex, colIndex)}
               onClick={(event) => handleCellClick(event, rowIndex, colIndex)}
             >
               {cell.number !== null && <div className="cell-number">{cell.number}</div>}
