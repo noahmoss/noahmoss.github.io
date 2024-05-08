@@ -23,10 +23,6 @@
   position: relative;
 }
 
-.grid-cell.filled {
-  background-color: black; /* Changes the background when the cell is filled */
-}
-
 .grid-cell.cursor-across {
   background-color: #F0FFFF; /* Changes the background when the cell is selected */
 }
@@ -37,6 +33,10 @@
 
 .grid-cell.cursor {
   background-color: lightblue; /* Changes the background when the cell is selected */
+}
+
+.grid-cell.filled {
+  background-color: black; /* Changes the background when the cell is filled */
 }
 
 .cell-number {
