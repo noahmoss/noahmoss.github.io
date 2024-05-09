@@ -1,11 +1,21 @@
-.grid {
+* {
+  color: black;
+}
+
+.crossword-container {
   display: flex;
-  flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding: 20px;
+  gap: 20px;
+  max-width: 1200px; /* Adjust based on your content width */
   margin: auto;
-  border: 3px solid black;
   user-select: none;
+}
+
+.grid {
+  flex: 1 0 auto; /* Allows the crossword grid to adjust based on content */
+  justify-content: center;
 }
 
 .grid-row {
@@ -46,4 +56,47 @@
   font-size: 14px; /* Increased font size for better visibility */
   color: black; /* Keeps the color subtle */
   padding-top: 2px; /* Provides a slight vertical offset */
+}
+
+.cell-letter {
+  position: absolute;
+  bottom: 5px;
+  color: black;
+  font-size: 50px;
+}
+
+.clues-panel {
+  flex: 1 1 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: Arial, sans-serif; /* Ensures a clean, readable font is used */
+}
+
+.clues-across, .clues-down {
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 10px;
+  overflow-y: auto;
+  height: 300px;
+}
+
+.clues-across h3, .clues-down h3 {
+  margin: 0 0 10px 0; /* Provides a little space below the headers */
+}
+
+.clues-across ul, .clues-down ul {
+  list-style-type: none; /* Removes bullet points */
+  padding: 0; /* Removes default padding */
+  margin: 0; /* Removes default margins */
+}
+
+.clues-across li, .clues-down li {
+  margin-bottom: 5px; /* Adds a small margin below each clue for spacing */
+  font-size: 16px; /* Sets a readable font size */
+}
+
+.clue-number {
+  font-weight: bold; /* Makes the number bold */
+  margin-right: 5px; /* Adds a space between the number and the clue text */
 }
