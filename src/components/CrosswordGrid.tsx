@@ -23,20 +23,120 @@ interface Cursor {
   direction: Direction;
 }
 
-const initialCells = (width: number, height: number) => {
-  let num = 1;
-  return Array.from({ length: height }, (_, rowIndex) => Array.from({ length: width }, (_, colIndex) => ({
-    filled: false,
-    number: (colIndex === 0 || rowIndex === 0) ? num++ : null,
-    letter: null,
-  })));
+interface Clues {
+  across: [number, string][];
+  down: [number, string][];
 }
+
+interface CrosswordData {
+  filledPositions: string;  // Compressed string of filled cell positions
+  clues: {
+    across: Array<[number, string]>;
+    down: Array<[number, string]>;
+  };
+}
+
+const clues1: Clues = {
+  across: [
+    [1, 'City on Florida\'s Space Coast'],
+    [5, 'What we\'re doing for dinner.'],
+    [6, 'What we\'re doing for dinner.'],
+    [7, 'What we\'re doing for dinner.'],
+    [8, 'What we\'re doing for dinner.'],
+  ],
+  down: [
+    [1, 'Answer to the first down clue'],
+    [2, 'Answer to the second down clue'],
+    [3, 'Answer to the second down clue'],
+    [4, 'Answer to the second down clue'],
+  ],
+};
+
+const encodeCrosswordData = (cells: Cell[][], clues: { across: Array<[number, string]>; down: Array<[number, string]> }): string => {
+  // Collecting filled positions
+  let filledPositions = [];
+  for (let row = 0; row < cells.length; row++) {
+    for (let col = 0; col < cells[row].length; col++) {
+      if (cells[row][col].filled) {
+        filledPositions.push(`${row}:${col}`);
+      }
+    }
+  }
+
+  // Creating the crossword data object
+  const data: CrosswordData = {
+    filledPositions: filledPositions.join(','),
+    clues: clues
+  };
+
+  // Encoding the data object to a Base64 string
+  const encodedData = btoa(JSON.stringify(data));
+  return encodedData;
+};
 
 const isStartOfWord = (cells: Cell[][], rowIndex: number, colIndex: number) => {
   return !cells[rowIndex][colIndex].filled &&
     ((colIndex === 0 || cells[rowIndex][colIndex - 1].filled) ||
      (rowIndex === 0 || cells[rowIndex - 1][colIndex].filled));
 }
+
+const updateCellsNumbering = (cells: Cell[][]) => {
+  let num = 1;
+  return cells.map((rowArray, rowIndex) =>
+                   rowArray.map((cell, colIndex) => {
+                     if (isStartOfWord(cells, rowIndex, colIndex)) {
+                       return { ...cell, number: num++ };
+                     }
+                     return { ...cell, number: null };
+                   })
+                  );
+}
+
+
+const initialCells = (width: number, height: number): Cell[][] => {
+  const queryParams = new URLSearchParams(window.location.search);
+  const encodedData = queryParams.get('cw');
+  const dataString = encodedData ? decodeURIComponent(atob(encodedData)) : null;
+  const crosswordData: CrosswordData = dataString ? JSON.parse(dataString) : null;
+  console.log(crosswordData)
+
+  let cells: Cell[][] = Array.from({ length: height }, (_, rowIndex) =>
+    Array.from({ length: width }, (_, colIndex) => ({
+      filled: false,
+      number: null,
+      letter: null,
+    }))
+  );
+
+  if (crosswordData && crosswordData.filledPositions) {
+    const filledPositions = crosswordData.filledPositions.split(',');
+    filledPositions.forEach(position => {
+      const [row, col] = position.split(':').map(Number);
+      if (row < height && col < width) {
+        cells[row][col].filled = true;
+      }
+    });
+  }
+
+  return updateCellsNumbering(cells);
+};
+
+const initialClues = (): { across: Array<[number, string]>; down: Array<[number, string]> } => {
+  const queryParams = new URLSearchParams(window.location.search);
+  const encodedData = queryParams.get('cw');
+  const dataString = encodedData ? decodeURIComponent(atob(encodedData)) : null;
+  const crosswordData: CrosswordData = dataString ? JSON.parse(dataString) : null;
+
+  if (crosswordData && crosswordData.clues) {
+    return crosswordData.clues;
+  }
+
+  // Return some default or empty clues if none are found in the URL
+  return {
+    across: [],
+    down: []
+  };
+};
 
 const findWordBoundaries = (cells: Cell[][], row: number, col: number, direction: Direction) => {
   let start = direction === Direction.Across ? col : row;
@@ -154,6 +254,7 @@ const startOfNextWord = (cells: Cell[][], cursor: Cursor, searchDir: 'forwards' 
 const CrosswordGrid = ({ width, height }: CrosswordGridProps) => {
   const [cells, setCells] = useState<Cell[][]>(initialCells(width, height));
   const [cursor, setCursor] = useState<Cursor>({row: 0, col: 0, direction: Direction.Across});
+  const [clues] = useState<Clues>(initialClues());
 
   const getClassName = (cell: Cell, rowIndex: number, colIndex: number) => {
     const classes = ['grid-cell'];
@@ -177,18 +278,25 @@ const CrosswordGrid = ({ width, height }: CrosswordGridProps) => {
     return classes.join(' ');
   };
 
+  const getClueClassName = (clue: (string | number)[], direction: Direction) => {
+    const { row, col } = cursor || {};
+    const classes = ['clue-item'];
+
+    if (direction === cursor.direction) {
+      const { start } = findWordBoundaries(cells, row, col, cursor.direction);
+
+      // Check if the cursor's current word matches the clue number
+      if ((direction === Direction.Across && cursor.row === row && clue[0] === cells[row][start]?.number) ||
+          (direction === Direction.Down && cursor.col === col && clue[0] === cells[start][col]?.number)) {
+        classes.push('active-clue');
+      }
+    }
+
+  return classes.join(' ');
+};
+
   const updateNumbering = useCallback(() => {
-    setCells(prevCells => {
-      let num = 1;
-      return prevCells.map((rowArray, rowIndex) =>
-                           rowArray.map((cell, colIndex) => {
-                             if (isStartOfWord(prevCells, rowIndex, colIndex)) {
-                               return { ...cell, number: num++ };
-                             }
-                             return { ...cell, number: null };
-                           })
-                          );
-    });
+    setCells(updateCellsNumbering);
   }, []);
 
   const handleCellClick = useCallback((event: React.MouseEvent<HTMLDivElement>, row: number, col: number) => {
@@ -246,7 +354,6 @@ const CrosswordGrid = ({ width, height }: CrosswordGridProps) => {
     }
 
     if (event.code === 'Tab') {
-      console.log('Tab');
       event.preventDefault();
       setCursor(prevCursor => {
         return startOfNextWord(cells, prevCursor, event.shiftKey ? "backwards" : "forwards");
@@ -354,6 +461,7 @@ const CrosswordGrid = ({ width, height }: CrosswordGridProps) => {
     }
   }, [cells, cursor, incrementCursor]);
 
+  console.log(encodeCrosswordData(cells, clues1));
   return (
     <div className="crossword-container">
       <div className="grid">
@@ -375,15 +483,29 @@ const CrosswordGrid = ({ width, height }: CrosswordGridProps) => {
         ))}
       </div>
 
-      <div className="clues-across">
-        <h3>Across</h3>
-        <ul>
-          <li><span className="clue-number">1</span> City on Florida's Space Coast</li>
-          <li><span className="clue-number">2</span> What we're doing for dinner.</li>
-        </ul>
-      </div>
-      <div className="clues-down">
-        <h3>Down</h3>
+      <div className="clues-panel">
+        <div className="clues-across">
+          <span className="clues-header">Across</span>
+          <ul>
+            {clues.across.map(clue => (
+              <li className={getClueClassName(clue, Direction.Across)} key={`across-${clue[0]}`}>
+                <span className="clue-number">{clue[0]}</span>
+                <span className="clue-text">{clue[1]}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="clues-down">
+          <span className="clues-header">Down</span>
+          <ul>
+            {clues.down.map(clue => (
+              <li className={getClueClassName(clue, Direction.Down)} key={`across-${clue[0]}`}>
+                <span className="clue-number">{clue[0]}</span>
+                <span className="clue-text">{clue[1]}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );

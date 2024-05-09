@@ -8,7 +8,7 @@
   align-items: flex-start;
   padding: 20px;
   gap: 20px;
-  max-width: 1200px; /* Adjust based on your content width */
+  max-width: 1400px; /* Adjust based on your content width */
   margin: auto;
   user-select: none;
 }
@@ -66,37 +66,51 @@
 }
 
 .clues-panel {
-  flex: 1 1 300px;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  justify-content: space-between; /* Ensures the panels are evenly spaced */
   font-family: Arial, sans-serif; /* Ensures a clean, readable font is used */
 }
 
 .clues-across, .clues-down {
-  background-color: white;
-  border: 1px solid #ccc;
+  flex: 0 1 50%; /* Each clue panel will take up 50% of the clues-panel width */
+  /* background-color: white; */
+  /* border: 1px solid #ccc; */
   padding: 10px;
   overflow-y: auto;
   height: 300px;
 }
 
-.clues-across h3, .clues-down h3 {
-  margin: 0 0 10px 0; /* Provides a little space below the headers */
+.clues-header {
+  font-weight: bold;
+  padding-bottom: 10px;
+  margin-bottom: 20px; /* Adds space below the header */
 }
 
 .clues-across ul, .clues-down ul {
   list-style-type: none; /* Removes bullet points */
   padding: 0; /* Removes default padding */
-  margin: 0; /* Removes default margins */
+  margin-top: 10px;
 }
 
 .clues-across li, .clues-down li {
-  margin-bottom: 5px; /* Adds a small margin below each clue for spacing */
-  font-size: 16px; /* Sets a readable font size */
+  display: flex; /* Makes the list item a flex container */
+  align-items: baseline; /* Aligns items along their baseline */
+  padding: 5px;
+  font-size: 16px;
+}
+
+.active-clue {
+  background-color: lightblue; /* Changes the background when the cell is selected */
 }
 
 .clue-number {
-  font-weight: bold; /* Makes the number bold */
-  margin-right: 5px; /* Adds a space between the number and the clue text */
+  font-weight: bold;
+  margin-right: 10px; /* Increases space between the number and the text */
+  margin-left: 10px;
+  white-space: nowrap; /* Keeps the number from wrapping */
+}
+
+.clue-text {
+  text-align: left; /* Ensures text alignment is left */
+  flex-grow: 1; /* Allows the text to take up the rest of the line */
 }
